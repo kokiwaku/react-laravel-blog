@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev -- --host 0.0.0.0
+    networks:
+      - app-network
+
+  # backend:
+  #   build: ./backend
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     - ./backend:/app
+  #   environment:
+  #     - APP_ENV=local
+  #   depends_on:
+  #     - database
+  #   networks:
+  #     - app-network
+
+  # database:
+  #   image: mysql:8.0
+  #   ports:
+  #     - "3306:3306"
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root
+  #     MYSQL_DATABASE: blog_app
+  #     MYSQL_USER: blog_user
+  #     MYSQL_PASSWORD: blog_password
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   networks:
+  #     - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
