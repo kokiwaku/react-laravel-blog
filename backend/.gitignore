@@ -1,0 +1,61 @@
+# Laravel Framework - .gitignore
+
+# Log files
+*.log
+
+# macOS system files
+.DS_Store
+
+# Environment configuration files (contain sensitive data)
+.env
+.env.backup
+.env.production
+
+# IDE and editor files
+.phpactor.json
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+
+# Testing and cache files
+.phpunit.result.cache
+/.phpunit.cache
+
+# Authentication files (OAuth, API keys, etc.)
+/auth.json
+
+# Node.js dependencies (if using frontend build tools)
+/node_modules
+
+# Laravel specific build and storage files
+/public/build          # Compiled assets
+/public/hot            # Hot reload files
+/public/storage        # Public storage symlink
+
+# Laravel storage files (runtime data, logs, cache, etc.)
+/storage/*.key         # Encryption keys
+/storage/pail          # Laravel Pail logs
+/storage/logs/*        # Application logs
+/storage/framework/cache/*     # Framework cache
+/storage/framework/sessions/*  # Session files
+/storage/framework/views/*     # Compiled views
+/storage/app/*         # Application storage (uploads, etc.)
+/storage/app/public/*  # Public storage files
+/storage/app/private/* # Private storage files
+
+# Alternative: Exclude entire storage directory except .gitignore files
+# /storage/*
+# !storage/.gitignore
+# !storage/*/.gitignore
+
+# PHP dependencies
+/vendor
+
+# Laravel Homestead (local development environment)
+Homestead.json
+Homestead.yaml
+
+# Windows system files
+Thumbs.db
