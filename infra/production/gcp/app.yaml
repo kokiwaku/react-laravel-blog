@@ -1,0 +1,47 @@
+runtime: docker
+
+# Service configuration
+service: react-laravel-blog
+
+# Environment variables
+env_variables:
+  APP_ENV: production
+  APP_DEBUG: false
+  APP_KEY: base64:your-app-key-here
+  APP_URL: https://your-service-url.run.app
+
+  # Database configuration
+  DB_CONNECTION: mysql
+  DB_HOST: /cloudsql/react-laravel-blog-465314:asia-northeast1:react-laravel-blog-db
+  DB_PORT: 3306
+  DB_DATABASE: react_laravel_blog
+  DB_USERNAME: your-db-username
+  DB_PASSWORD: your-db-password
+
+  # Cache configuration
+  CACHE_DRIVER: file
+  SESSION_DRIVER: file
+  QUEUE_CONNECTION: sync
+
+  # Logging
+  LOG_CHANNEL: stderr
+  LOG_LEVEL: info
+
+# Resource allocation
+resources:
+  cpu: 1
+  memory: 512Mi
+
+# Scaling configuration
+automatic_scaling:
+  min_instances: 0
+  max_instances: 10
+  target_cpu_utilization: 70
+
+# Health check
+health_check:
+  path: /health
+  check_interval_sec: 30
+  timeout_sec: 10
+  unhealthy_threshold: 3
+  healthy_threshold: 2
