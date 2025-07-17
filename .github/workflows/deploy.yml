@@ -68,16 +68,16 @@ jobs:
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy $SERVICE_NAME \
-          --image $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \    # 使用するイメージ
-          --region $REGION \                                   # デプロイリージョン
-          --platform managed \                                 # フルマネージド
-          --allow-unauthenticated \                           # 認証なしアクセス許可
-          --port 8080 \                                       # コンテナポート
-          --memory 512Mi \                                    # メモリ上限
-          --cpu 1 \                                           # CPU数
-          --min-instances 0 \                                 # 最小インスタンス（コスト削減）
-          --max-instances 10                                  # 最大インスタンス（負荷制限）
-      # 理由: 新しいイメージで本番サービスを更新
+          --image $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
+          --region $REGION \
+          --platform managed \
+          --allow-unauthenticated \
+          --port 8080 \
+          --memory 512Mi \
+          --cpu 1 \
+          --min-instances 0 \
+          --max-instances 10
+      # 理由: 新しいイメージで本番サービスを更新（行内コメント削除でコマンド構文修正）
 
     # ステップ8: デプロイ結果の確認
     - name: Show service URL
