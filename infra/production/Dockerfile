@@ -31,14 +31,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /app/backend
 
-# Copy composer files
-COPY backend/composer.lock backend/composer.json ./
+# Copy backend application first
+COPY backend/ .
 
 # Install PHP dependencies (production only)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Copy backend application
-COPY backend/ .
 
 # Set proper permissions
 RUN chown -R www-data:www-data /app/backend \

@@ -1,0 +1,78 @@
+# GitHub ActionsでCloud Runに自動デプロイするワークフロー
+name: Deploy to Cloud Run
+
+# ワークフローの実行トリガー
+on:
+  push:
+    branches: [main]      # mainブランチにプッシュされた時に実行
+  workflow_dispatch:      # 手動実行も可能（GitHubのActionsタブから）
+
+# 環境変数（全ジョブで共通使用）
+env:
+  PROJECT_ID: react-laravel-blog-465314    # GCPプロジェクトID
+  REGION: asia-northeast1                  # Cloud Runデプロイリージョン
+  SERVICE_NAME: react-laravel-blog         # Cloud Runサービス名
+  REGISTRY: asia-northeast1-docker.pkg.dev # Artifact Registry URL
+  REPOSITORY: docker-repo                  # Artifact Registry リポジトリ名
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest    # Ubuntu最新版の仮想マシンで実行
+
+    steps:
+    # ステップ1: ソースコードをチェックアウト
+    - name: Checkout code
+      uses: actions/checkout@v4    # GitHubリポジトリのコードを取得
+      # 理由: ビルドに必要なDockerfile、ソースコードが必要
+
+    # ステップ2: Google Cloud CLIの設定
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY }}    # サービスアカウントキー（GitHub Secrets）
+        project_id: ${{ secrets.GCP_PROJECT_ID }}         # プロジェクトID（GitHub Secrets）
+      # 理由: GCPサービス（Cloud Run、Container Registry）にアクセスするため
+
+    # ステップ3: Docker認証設定
+    - name: Configure Docker for Artifact Registry
+      run: gcloud auth configure-docker asia-northeast1-docker.pkg.dev
+      # 理由: Artifact Registry（pkg.dev）にDockerイメージをプッシュするため
+
+    # ステップ4: Dockerイメージのビルド
+    - name: Build Docker image
+      run: |
+        # コミットハッシュ付きタグでビルド（バージョン管理）
+        docker build -t $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:$GITHUB_SHA .
+        # latestタグも追加（常に最新版として参照可能）
+        docker tag $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:$GITHUB_SHA $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
+      # 理由: アプリケーションをコンテナ化、デプロイ可能な形式に変換
+
+    # ステップ5: Artifact Registryにプッシュ
+    - name: Push Docker image to Artifact Registry
+      run: |
+        # コミットハッシュ版をプッシュ（履歴保持）
+        docker push $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:$GITHUB_SHA
+        # latest版をプッシュ（Cloud Runで使用）
+        docker push $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
+      # 理由: Cloud RunがArtifact Registryからイメージを取得してデプロイするため
+
+    # ステップ6: Cloud Runにデプロイ
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy $SERVICE_NAME \
+          --image $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \    # 使用するイメージ
+          --region $REGION \                                   # デプロイリージョン
+          --platform managed \                                 # フルマネージド
+          --allow-unauthenticated \                           # 認証なしアクセス許可
+          --port 8080 \                                       # コンテナポート
+          --memory 512Mi \                                    # メモリ上限
+          --cpu 1 \                                           # CPU数
+          --min-instances 0 \                                 # 最小インスタンス（コスト削減）
+          --max-instances 10                                  # 最大インスタンス（負荷制限）
+      # 理由: 新しいイメージで本番サービスを更新
+
+    # ステップ7: デプロイ結果の確認
+    - name: Show service URL
+      run: |
+        gcloud run services describe $SERVICE_NAME --region $REGION --format 'value(status.url)'
+      # 理由: デプロイ成功確認、アクセス用URLの表示
