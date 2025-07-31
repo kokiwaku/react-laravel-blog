@@ -1,30 +1,36 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Contact from "./routes/app/contact/Contact"
+import Posts from "./routes/app/posts/Posts"
+import PostDetail from "./routes/app/posts/PostDetail"
+import Profile from "./routes/app/profile/Profile"
+import NotFound from "./routes/errors/NotFound"
+import Home from "./routes/app/home/Home"
 
 export const createAppRouter = () => {
   return createBrowserRouter([
     {
       path: "/",
-      element: <div>Home</div>,
+      element: <Home />,
     },
     {
       path: "/posts",
-      element: <div>Posts</div>,
+      element: <Posts />,
     },
     {
       path: "/posts/:id",
-      element: <div>Posts detail</div>,
+      element: <PostDetail />,
     },
     {
       path: "/contact",
-      element: <div>Contact</div>,
+      element: <Contact />,
     },
     {
       path: "/profile",
-      element: <div>Profile</div>,
+      element: <Profile />,
     },
     {
       path: "*",
-      element: <div>404</div>,
+      element: <NotFound />,
     },
   ]);
 }
