@@ -25,29 +25,37 @@ jobs:
       uses: actions/checkout@v4    # GitHubリポジトリのコードを取得
       # 理由: ビルドに必要なDockerfile、ソースコードが必要
 
-    # ステップ2: Google Cloud CLIの設定
+    # ステップ2: GCP認証
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}    # サービスアカウントキー（GitHub Secrets）
+      # 理由: GCPサービスにアクセスするための認証
+
+    # ステップ3: Google Cloud CLIの設定
     - name: Set up Google Cloud CLI
       uses: google-github-actions/setup-gcloud@v1
       with:
-        service_account_key: ${{ secrets.GCP_SA_KEY }}    # サービスアカウントキー（GitHub Secrets）
         project_id: ${{ secrets.GCP_PROJECT_ID }}         # プロジェクトID（GitHub Secrets）
-      # 理由: GCPサービス（Cloud Run、Container Registry）にアクセスするため
+      # 理由: gcloudコマンド使用のためのCLI設定
 
-    # ステップ3: Docker認証設定
+    # ステップ4: Docker認証設定
     - name: Configure Docker for Artifact Registry
-      run: gcloud auth configure-docker asia-northeast1-docker.pkg.dev
-      # 理由: Artifact Registry（pkg.dev）にDockerイメージをプッシュするため
+      run: |
+        gcloud auth configure-docker asia-northeast1-docker.pkg.dev
+        gcloud auth list
+      # 理由: Artifact Registry（pkg.dev）にDockerイメージをプッシュするため（認証状況確認付き）
 
-    # ステップ4: Dockerイメージのビルド
+    # ステップ5: Dockerイメージのビルド
     - name: Build Docker image
       run: |
         # コミットハッシュ付きタグでビルド（バージョン管理）
         docker build -t $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:$GITHUB_SHA -f infra/production/Dockerfile .
         # latestタグも追加（常に最新版として参照可能）
         docker tag $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:$GITHUB_SHA $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
-      # 理由: アプリケーションをコンテナ化、デプロイ可能な形式に変換
+      # 理由: アプリケーションをコンテナ化、デプロイ可能な形式に変換（Dockerfileパス明示指定）
 
-    # ステップ5: Artifact Registryにプッシュ
+    # ステップ6: Artifact Registryにプッシュ
     - name: Push Docker image to Artifact Registry
       run: |
         # コミットハッシュ版をプッシュ（履歴保持）
@@ -56,22 +64,22 @@ jobs:
         docker push $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
       # 理由: Cloud RunがArtifact Registryからイメージを取得してデプロイするため
 
-    # ステップ6: Cloud Runにデプロイ
+    # ステップ7: Cloud Runにデプロイ
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy $SERVICE_NAME \
-          --image $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \    # 使用するイメージ
-          --region $REGION \                                   # デプロイリージョン
-          --platform managed \                                 # フルマネージド
-          --allow-unauthenticated \                           # 認証なしアクセス許可
-          --port 8080 \                                       # コンテナポート
-          --memory 512Mi \                                    # メモリ上限
-          --cpu 1 \                                           # CPU数
-          --min-instances 0 \                                 # 最小インスタンス（コスト削減）
-          --max-instances 10                                  # 最大インスタンス（負荷制限）
-      # 理由: 新しいイメージで本番サービスを更新
+          --image $REGISTRY/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
+          --region $REGION \
+          --platform managed \
+          --allow-unauthenticated \
+          --port 8080 \
+          --memory 512Mi \
+          --cpu 1 \
+          --min-instances 0 \
+          --max-instances 10
+      # 理由: 新しいイメージで本番サービスを更新（行内コメント削除でコマンド構文修正）
 
-    # ステップ7: デプロイ結果の確認
+    # ステップ8: デプロイ結果の確認
     - name: Show service URL
       run: |
         gcloud run services describe $SERVICE_NAME --region $REGION --format 'value(status.url)'
