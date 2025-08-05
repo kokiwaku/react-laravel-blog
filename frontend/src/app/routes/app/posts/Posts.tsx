@@ -1,10 +1,14 @@
 import { ContentLayout } from "@/components/layouts/ContentLayout";
+import { PostList } from "@/features/posts/components/PostList";
+import { PostsProvider } from "@/features/posts/contexts/PostsContext";
 
 const Posts = () => {
   return (
     <>
       <ContentLayout>
-        <h1>Posts</h1>
+        <PostsProvider>
+          <PostList />
+        </PostsProvider>
       </ContentLayout>
     </>
   );
